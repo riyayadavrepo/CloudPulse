@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Feedback Intelligence Dashboard</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <h1>Feedback Intelligence Dashboard</h1>
+      <p class="subtitle">AI-powered customer feedback analysis for Cloudflare Products</p>
+    </header>
+
+    <!-- Stats Overview -->
+    <section class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon">📊</div>
+        <div class="stat-content">
+          <div class="stat-label">Total Feedback (7 days)</div>
+          <div class="stat-value" id="total-7days">-</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">😊</div>
+        <div class="stat-content">
+          <div class="stat-label">Positive Sentiment</div>
+          <div class="stat-value" id="positive-sentiment">-</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">🚨</div>
+        <div class="stat-content">
+          <div class="stat-label">Critical Issues</div>
+          <div class="stat-value" id="critical-issues">-</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">📈</div>
+        <div class="stat-content">
+          <div class="stat-label">Trend</div>
+          <div class="stat-value" id="trend">-</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Charts Section -->
+    <section class="charts-section">
+      <div class="chart-card">
+        <h3>Feedback Trends (Last 7 Days)</h3>
+        <canvas id="trendsChart"></canvas>
+      </div>
+
+      <div class="chart-card">
+        <h3>Sentiment Distribution</h3>
+        <canvas id="sentimentChart"></canvas>
+      </div>
+    </section>
+
+    <!-- Top Issues -->
+    <section class="top-issues">
+      <h2>🎯 Top Issues This Week</h2>
+      <div id="issues-list" class="issues-list">
+        <div class="loading">Loading...</div>
+      </div>
+    </section>
+
+    <!-- AI Chat Agent -->
+    <section class="chat-section">
+      <h2>💬 Ask the AI Agent</h2>
+      <div class="chat-container">
+        <div class="chat-messages" id="chat-messages">
+          <div class="message assistant">
+            <div class="message-content">
+              Hello! I'm your feedback intelligence assistant. Ask me anything about customer feedback, trends, or specific issues. For example:
+              <ul>
+                <li>"What are the top performance issues this week?"</li>
+                <li>"Show me critical bugs from enterprise customers"</li>
+                <li>"What's the sentiment around Workers AI?"</li>
+                <li>"Are there any D1 database complaints?"</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="chat-input-container">
+          <input
+            type="text"
+            id="chat-input"
+            class="chat-input"
+            placeholder="Ask about feedback trends, issues, or specific products..."
+          />
+          <button id="send-btn" class="send-btn">Send</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Daily Summary -->
+    <section class="daily-summary">
+      <h2>📧 Latest Daily Summary</h2>
+      <div id="summary-content" class="summary-content">
+        <div class="loading">Loading...</div>
+      </div>
+      <button id="generate-summary-btn" class="secondary-btn">Generate New Summary</button>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <p>Built with Cloudflare Workers, Pages, D1, and Workers AI</p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
