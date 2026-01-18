@@ -1,7 +1,7 @@
 // Configuration
 const API_BASE = window.location.hostname === 'localhost'
   ? 'http://localhost:8787'
-  : 'https://feedback-intelligence.YOUR-SUBDOMAIN.workers.dev';
+  : 'https://feedback-intelligence.riya-yadav-th.workers.dev';
 
 // State
 let chatHistory = [];

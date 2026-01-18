@@ -10,7 +10,7 @@ binding = "AI"
 [[d1_databases]]
 binding = "DB"
 database_name = "feedback-db"
-database_id = "your-database-id-here"  # Will be updated after creating D1 database
+database_id = "03d1869b-046d-48a3-833e-b8d5f67863c5"
 
 # CORS configuration for local development
 [vars]
