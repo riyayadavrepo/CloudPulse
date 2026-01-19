@@ -3,16 +3,52 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Feedback Intelligence Dashboard</title>
+  <title>CloudPulse</title>
   <link rel="stylesheet" href="styles.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 <body>
   <div class="container">
-    <!-- Header -->
+    <!-- Header with Integrated Date Filter -->
     <header class="header">
-      <h1>Feedback Intelligence Dashboard</h1>
-      <p class="subtitle">AI-powered customer feedback analysis for Cloudflare Products</p>
+      <div class="header-content">
+        <div class="header-title">
+          <h1>CloudPulse</h1>
+          <p class="subtitle">Know what your customers have to say</p>
+        </div>
+
+        <!-- Compact Date Filter -->
+        <div class="date-filter-compact">
+          <div class="quick-filters-compact">
+            <button class="quick-filter-btn active" data-days="7">7D</button>
+            <button class="quick-filter-btn" data-days="14">14D</button>
+            <button class="quick-filter-btn" data-days="30">30D</button>
+            <button class="quick-filter-btn" data-days="90">90D</button>
+          </div>
+          <div class="custom-date-toggle">
+            <button id="toggle-custom-date" class="icon-btn" title="Custom Date Range">
+              📅
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Custom Date Picker Dropdown (Hidden by default) -->
+      <div id="custom-date-panel" class="custom-date-panel hidden">
+        <div class="date-picker-row">
+          <div class="date-input-group-compact">
+            <label>From</label>
+            <input type="date" id="start-date" class="date-input-compact">
+          </div>
+          <div class="date-separator">→</div>
+          <div class="date-input-group-compact">
+            <label>To</label>
+            <input type="date" id="end-date" class="date-input-compact">
+          </div>
+          <button id="apply-filter-btn" class="apply-btn">Apply</button>
+          <button id="close-custom-date" class="close-btn">✕</button>
+        </div>
+      </div>
     </header>
 
     <!-- Stats Overview -->
@@ -20,7 +56,7 @@
       <div class="stat-card">
         <div class="stat-icon">📊</div>
         <div class="stat-content">
-          <div class="stat-label">Total Feedback (7 days)</div>
+          <div class="stat-label" id="stat-label-total">Total Feedback</div>
           <div class="stat-value" id="total-7days">-</div>
         </div>
       </div>

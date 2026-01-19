@@ -22,7 +22,7 @@ export default {
     try {
       // Route requests
       if (url.pathname === '/api/stats') {
-        return handleStats(env, corsHeaders);
+        return handleStats(env, corsHeaders, url);
       }
 
       if (url.pathname === '/api/chat' && request.method === 'POST') {
@@ -81,16 +81,31 @@ export default {
  * GET /api/stats
  * Returns dashboard statistics
  */
-async function handleStats(env, corsHeaders) {
+async function handleStats(env, corsHeaders, url) {
+  // Get date range from query parameters or use defaults
+  const startDateParam = url?.searchParams?.get('startDate');
+  const endDateParam = url?.searchParams?.get('endDate');
+
   const now = new Date();
-  const last7Days = new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString();
+  let startDate, endDate;
+
+  if (startDateParam && endDateParam) {
+    // Use custom date range
+    startDate = new Date(startDateParam).toISOString();
+    endDate = new Date(endDateParam + 'T23:59:59').toISOString(); // End of day
+  } else {
+    // Default to last 7 days
+    startDate = new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString();
+    endDate = now.toISOString();
+  }
+
+  // Get total counts for selected date range
+  const totalDateRange = await env.DB.prepare(
+    'SELECT COUNT(*) as count FROM feedback WHERE created_at >= ? AND created_at <= ?'
+  ).bind(startDate, endDate).first();
+
+  // Keep 30 day total for comparison (optional)
   const last30Days = new Date(now - 30 * 24 * 60 * 60 * 1000).toISOString();
-
-  // Get total counts
-  const total7Days = await env.DB.prepare(
-    'SELECT COUNT(*) as count FROM feedback WHERE created_at > ?'
-  ).bind(last7Days).first();
-
   const total30Days = await env.DB.prepare(
     'SELECT COUNT(*) as count FROM feedback WHERE created_at > ?'
   ).bind(last30Days).first();
@@ -99,34 +114,34 @@ async function handleStats(env, corsHeaders) {
   const sentimentBreakdown = await env.DB.prepare(
     `SELECT sentiment, COUNT(*) as count
      FROM feedback
-     WHERE created_at > ?
+     WHERE created_at >= ? AND created_at <= ?
      GROUP BY sentiment`
-  ).bind(last7Days).all();
+  ).bind(startDate, endDate).all();
 
   // Top categories
   const topCategories = await env.DB.prepare(
     `SELECT category, COUNT(*) as count
      FROM feedback
-     WHERE created_at > ?
+     WHERE created_at >= ? AND created_at <= ?
      GROUP BY category
      ORDER BY count DESC
      LIMIT 5`
-  ).bind(last7Days).all();
+  ).bind(startDate, endDate).all();
 
   // Feedback by source
   const bySource = await env.DB.prepare(
     `SELECT source, COUNT(*) as count
      FROM feedback
-     WHERE created_at > ?
+     WHERE created_at >= ? AND created_at <= ?
      GROUP BY source
      ORDER BY count DESC`
-  ).bind(last7Days).all();
+  ).bind(startDate, endDate).all();
 
   // Priority breakdown
   const byPriority = await env.DB.prepare(
     `SELECT priority, COUNT(*) as count
      FROM feedback
-     WHERE created_at > ?
+     WHERE created_at >= ? AND created_at <= ?
      AND priority IS NOT NULL
      GROUP BY priority
      ORDER BY
@@ -136,32 +151,36 @@ async function handleStats(env, corsHeaders) {
          WHEN 'medium' THEN 3
          WHEN 'low' THEN 4
        END`
-  ).bind(last7Days).all();
+  ).bind(startDate, endDate).all();
 
-  // Trends over time (last 7 days)
+  // Trends over time
   const trends = await env.DB.prepare(
     `SELECT DATE(created_at) as date, COUNT(*) as count
      FROM feedback
-     WHERE created_at > ?
+     WHERE created_at >= ? AND created_at <= ?
      GROUP BY DATE(created_at)
      ORDER BY date ASC`
-  ).bind(last7Days).all();
+  ).bind(startDate, endDate).all();
 
   // Top issues (high priority items with most mentions)
   const topIssues = await env.DB.prepare(
     `SELECT category, priority, COUNT(*) as count,
             GROUP_CONCAT(SUBSTR(content, 1, 100), ' | ') as examples
      FROM feedback
-     WHERE created_at > ? AND (priority = 'critical' OR priority = 'high')
+     WHERE created_at >= ? AND created_at <= ? AND (priority = 'critical' OR priority = 'high')
      GROUP BY category, priority
      ORDER BY count DESC
      LIMIT 5`
-  ).bind(last7Days).all();
+  ).bind(startDate, endDate).all();
 
   const stats = {
     overview: {
-      total_7days: total7Days?.count || 0,
+      total_7days: totalDateRange?.count || 0,
       total_30days: total30Days?.count || 0,
+    },
+    dateRange: {
+      startDate: startDateParam || 'last 7 days',
+      endDate: endDateParam || 'now'
     },
     sentiment: sentimentBreakdown.results.reduce((acc, row) => {
       acc[row.sentiment] = row.count;

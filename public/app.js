@@ -7,9 +7,14 @@ const API_BASE = window.location.hostname === 'localhost'
 let chatHistory = [];
 let trendsChart = null;
 let sentimentChart = null;
+let currentDateRange = {
+  startDate: null,
+  endDate: null
+};
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => {
+  setupDateFilters();
   loadDashboardStats();
   loadTopIssues();
   loadLatestSummary();
@@ -22,8 +27,33 @@ document.addEventListener('DOMContentLoaded', () => {
  */
 async function loadDashboardStats() {
   try {
-    const response = await fetch(`${API_BASE}/api/stats`);
+    // Build URL with date parameters if set
+    let url = `${API_BASE}/api/stats`;
+    const params = new URLSearchParams();
+
+    if (currentDateRange.startDate) {
+      params.append('startDate', currentDateRange.startDate);
+    }
+    if (currentDateRange.endDate) {
+      params.append('endDate', currentDateRange.endDate);
+    }
+
+    if (params.toString()) {
+      url += `?${params.toString()}`;
+    }
+
+    const response = await fetch(url);
     const data = await response.json();
+
+    // Update date range label
+    const labelEl = document.getElementById('stat-label-total');
+    if (currentDateRange.startDate && currentDateRange.endDate) {
+      const start = new Date(currentDateRange.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      const end = new Date(currentDateRange.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      labelEl.textContent = `Total Feedback (${start} - ${end})`;
+    } else {
+      labelEl.textContent = 'Total Feedback (Last 7 days)';
+    }
 
     // Update stat cards
     document.getElementById('total-7days').textContent = data.overview.total_7days;
@@ -397,4 +427,90 @@ function showError(message) {
 function showSuccess(message) {
   // Simple alert for now
   alert(message);
+}
+
+/**
+ * Setup date filter handlers
+ */
+function setupDateFilters() {
+  const startDateInput = document.getElementById('start-date');
+  const endDateInput = document.getElementById('end-date');
+  const applyBtn = document.getElementById('apply-filter-btn');
+  const toggleBtn = document.getElementById('toggle-custom-date');
+  const closeBtn = document.getElementById('close-custom-date');
+  const customPanel = document.getElementById('custom-date-panel');
+  const quickFilterBtns = document.querySelectorAll('.quick-filter-btn');
+
+  // Set default end date to today
+  const today = new Date().toISOString().split('T')[0];
+  endDateInput.value = today;
+
+  // Set default start date to 7 days ago
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  startDateInput.value = sevenDaysAgo;
+
+  // Toggle custom date panel
+  toggleBtn.addEventListener('click', () => {
+    customPanel.classList.toggle('hidden');
+  });
+
+  // Close custom date panel
+  closeBtn.addEventListener('click', () => {
+    customPanel.classList.add('hidden');
+  });
+
+  // Apply custom filter button
+  applyBtn.addEventListener('click', () => {
+    const startDate = startDateInput.value;
+    const endDate = endDateInput.value;
+
+    if (!startDate || !endDate) {
+      showError('Please select both start and end dates');
+      return;
+    }
+
+    if (new Date(startDate) > new Date(endDate)) {
+      showError('Start date cannot be after end date');
+      return;
+    }
+
+    currentDateRange.startDate = startDate;
+    currentDateRange.endDate = endDate;
+
+    // Reload dashboard with new date range
+    loadDashboardStats();
+    loadTopIssues();
+
+    // Clear active quick filters
+    quickFilterBtns.forEach(btn => btn.classList.remove('active'));
+
+    // Close panel
+    customPanel.classList.add('hidden');
+  });
+
+  // Quick filter buttons
+  quickFilterBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const days = parseInt(btn.dataset.days);
+      const today = new Date();
+      const startDate = new Date(today.getTime() - days * 24 * 60 * 60 * 1000);
+
+      startDateInput.value = startDate.toISOString().split('T')[0];
+      endDateInput.value = today.toISOString().split('T')[0];
+
+      currentDateRange.startDate = startDateInput.value;
+      currentDateRange.endDate = endDateInput.value;
+
+      // Update active state
+      quickFilterBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      // Hide custom panel
+      customPanel.classList.add('hidden');
+
+      // Reload dashboard
+      loadDashboardStats();
+      loadTopIssues();
+    });
+  });
 }
