@@ -153,6 +153,21 @@ async function handleStats(env, corsHeaders, url) {
        END`
   ).bind(startDate, endDate).all();
 
+  // User type breakdown
+  const byUserType = await env.DB.prepare(
+    `SELECT user_type, COUNT(*) as count
+     FROM feedback
+     WHERE created_at >= ? AND created_at <= ?
+     AND user_type IS NOT NULL
+     GROUP BY user_type
+     ORDER BY
+       CASE user_type
+         WHEN 'enterprise' THEN 1
+         WHEN 'pro' THEN 2
+         WHEN 'free' THEN 3
+       END`
+  ).bind(startDate, endDate).all();
+
   // Trends over time
   const trends = await env.DB.prepare(
     `SELECT DATE(created_at) as date, COUNT(*) as count
@@ -189,6 +204,7 @@ async function handleStats(env, corsHeaders, url) {
     categories: topCategories.results,
     sources: bySource.results,
     priorities: byPriority.results,
+    userTypes: byUserType.results,
     trends: trends.results,
     topIssues: topIssues.results
   };

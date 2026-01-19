@@ -7,6 +7,10 @@ const API_BASE = window.location.hostname === 'localhost'
 let chatHistory = [];
 let trendsChart = null;
 let sentimentChart = null;
+let categoryChart = null;
+let sourceChart = null;
+let priorityChart = null;
+let userTypeChart = null;
 let currentDateRange = {
   startDate: null,
   endDate: null
@@ -14,6 +18,8 @@ let currentDateRange = {
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => {
+  setupHamburgerMenu();
+  setupCollapsibleSections();
   setupDateFilters();
   loadDashboardStats();
   loadTopIssues();
@@ -21,6 +27,72 @@ document.addEventListener('DOMContentLoaded', () => {
   setupChatHandlers();
   setupSummaryGenerator();
 });
+
+/**
+ * Setup hamburger menu
+ */
+function setupHamburgerMenu() {
+  const hamburger = document.getElementById('hamburger-btn');
+  const sideNav = document.getElementById('side-nav');
+  const overlay = document.getElementById('nav-overlay');
+  const closeBtn = document.getElementById('close-nav-btn');
+  const navLinks = document.querySelectorAll('.nav-menu a');
+
+  // Toggle menu
+  hamburger.addEventListener('click', () => {
+    hamburger.classList.toggle('active');
+    sideNav.classList.toggle('active');
+    overlay.classList.toggle('active');
+  });
+
+  // Close menu
+  closeBtn.addEventListener('click', closeMenu);
+  overlay.addEventListener('click', closeMenu);
+
+  // Navigate to section
+  navLinks.forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      const sectionId = link.getAttribute('data-section');
+      const section = document.getElementById(sectionId);
+      if (section) {
+        closeMenu();
+        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // Expand section if collapsed
+        if (section.classList.contains('collapsed')) {
+          toggleSection(sectionId);
+        }
+      }
+    });
+  });
+
+  function closeMenu() {
+    hamburger.classList.remove('active');
+    sideNav.classList.remove('active');
+    overlay.classList.remove('active');
+  }
+}
+
+/**
+ * Setup collapsible sections
+ */
+function setupCollapsibleSections() {
+  // Start with all sections expanded
+  const sections = document.querySelectorAll('.collapsible-section');
+  sections.forEach(section => {
+    section.classList.remove('collapsed');
+  });
+}
+
+/**
+ * Toggle section collapse/expand
+ */
+function toggleSection(sectionId) {
+  const section = document.getElementById(sectionId);
+  if (section) {
+    section.classList.toggle('collapsed');
+  }
+}
 
 /**
  * Load dashboard statistics
@@ -82,6 +154,10 @@ async function loadDashboardStats() {
     // Render charts
     renderTrendsChart(data.trends);
     renderSentimentChart(data.sentiment);
+    renderCategoryChart(data.categories || []);
+    renderSourceChart(data.sources || []);
+    renderPriorityChart(data.priorities || []);
+    renderUserTypeChart(data.userTypes || []);
 
   } catch (error) {
     console.error('Failed to load stats:', error);
@@ -99,6 +175,16 @@ function renderTrendsChart(trends) {
     trendsChart.destroy();
   }
 
+  // Update chart title with date range
+  const chartTitle = document.getElementById('trends-chart-title');
+  if (chartTitle && currentDateRange.startDate && currentDateRange.endDate) {
+    const start = new Date(currentDateRange.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const end = new Date(currentDateRange.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    chartTitle.textContent = `Feedback Trends (${start} - ${end})`;
+  } else if (chartTitle) {
+    chartTitle.textContent = 'Feedback Trends (Last 7 Days)';
+  }
+
   trendsChart = new Chart(ctx, {
     type: 'line',
     data: {
@@ -106,10 +192,15 @@ function renderTrendsChart(trends) {
       datasets: [{
         label: 'Feedback Items',
         data: trends.map(t => t.count),
-        borderColor: '#667eea',
-        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+        borderColor: '#F38020',
+        backgroundColor: 'rgba(243, 128, 32, 0.1)',
         fill: true,
-        tension: 0.4
+        tension: 0.4,
+        pointBackgroundColor: '#F38020',
+        pointBorderColor: '#fff',
+        pointBorderWidth: 2,
+        pointRadius: 4,
+        pointHoverRadius: 6
       }]
     },
     options: {
@@ -118,6 +209,23 @@ function renderTrendsChart(trends) {
       plugins: {
         legend: {
           display: false
+        },
+        tooltip: {
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+          titleColor: '#fff',
+          bodyColor: '#fff',
+          borderColor: '#F38020',
+          borderWidth: 1,
+          padding: 12,
+          displayColors: false,
+          callbacks: {
+            title: (context) => {
+              return context[0].label;
+            },
+            label: (context) => {
+              return `${context.parsed.y} feedback items`;
+            }
+          }
         }
       },
       scales: {
@@ -125,6 +233,14 @@ function renderTrendsChart(trends) {
           beginAtZero: true,
           ticks: {
             precision: 0
+          },
+          grid: {
+            color: 'rgba(0, 0, 0, 0.05)'
+          }
+        },
+        x: {
+          grid: {
+            display: false
           }
         }
       }
@@ -142,6 +258,8 @@ function renderSentimentChart(sentiment) {
     sentimentChart.destroy();
   }
 
+  const total = (sentiment.positive || 0) + (sentiment.neutral || 0) + (sentiment.negative || 0);
+
   sentimentChart = new Chart(ctx, {
     type: 'doughnut',
     data: {
@@ -153,10 +271,12 @@ function renderSentimentChart(sentiment) {
           sentiment.negative || 0
         ],
         backgroundColor: [
-          '#2e7d32',
-          '#757575',
-          '#c62828'
-        ]
+          '#2e7d32',  // Green for positive
+          '#757575',  // Gray for neutral
+          '#c62828'   // Red for negative
+        ],
+        borderWidth: 2,
+        borderColor: '#fff'
       }]
     },
     options: {
@@ -164,7 +284,275 @@ function renderSentimentChart(sentiment) {
       maintainAspectRatio: true,
       plugins: {
         legend: {
-          position: 'bottom'
+          position: 'bottom',
+          labels: {
+            padding: 15,
+            font: {
+              size: 12
+            }
+          }
+        },
+        tooltip: {
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+          titleColor: '#fff',
+          bodyColor: '#fff',
+          borderColor: '#F38020',
+          borderWidth: 1,
+          padding: 12,
+          callbacks: {
+            label: (context) => {
+              const label = context.label || '';
+              const value = context.parsed || 0;
+              const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+              return `${label}: ${value} (${percentage}%)`;
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+/**
+ * Render category chart
+ */
+function renderCategoryChart(categories) {
+  const ctx = document.getElementById('categoryChart');
+
+  if (categoryChart) {
+    categoryChart.destroy();
+  }
+
+  categoryChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: categories.map(c => c.category.charAt(0).toUpperCase() + c.category.slice(1)),
+      datasets: [{
+        label: 'Count',
+        data: categories.map(c => c.count),
+        backgroundColor: [
+          '#F38020',
+          '#0051C3',
+          '#2e7d32',
+          '#f57c00',
+          '#c62828',
+          '#757575'
+        ],
+        borderWidth: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      indexAxis: 'y',
+      plugins: {
+        legend: {
+          display: false
+        },
+        tooltip: {
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+          titleColor: '#fff',
+          bodyColor: '#fff',
+          borderColor: '#F38020',
+          borderWidth: 1,
+          padding: 12
+        }
+      },
+      scales: {
+        x: {
+          beginAtZero: true,
+          ticks: {
+            precision: 0
+          },
+          grid: {
+            color: 'rgba(0, 0, 0, 0.05)'
+          }
+        },
+        y: {
+          grid: {
+            display: false
+          }
+        }
+      }
+    }
+  });
+}
+
+/**
+ * Render source chart
+ */
+function renderSourceChart(sources) {
+  const ctx = document.getElementById('sourceChart');
+
+  if (sourceChart) {
+    sourceChart.destroy();
+  }
+
+  sourceChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: sources.map(s => s.source.charAt(0).toUpperCase() + s.source.slice(1)),
+      datasets: [{
+        data: sources.map(s => s.count),
+        backgroundColor: [
+          '#F38020',
+          '#0051C3',
+          '#2e7d32',
+          '#f57c00',
+          '#c62828'
+        ],
+        borderWidth: 2,
+        borderColor: '#fff'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            padding: 15,
+            font: {
+              size: 12
+            }
+          }
+        },
+        tooltip: {
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+          titleColor: '#fff',
+          bodyColor: '#fff',
+          borderColor: '#F38020',
+          borderWidth: 1,
+          padding: 12
+        }
+      }
+    }
+  });
+}
+
+/**
+ * Render priority chart
+ */
+function renderPriorityChart(priorities) {
+  const ctx = document.getElementById('priorityChart');
+
+  if (priorityChart) {
+    priorityChart.destroy();
+  }
+
+  // Order priorities: critical, high, medium, low
+  const priorityOrder = ['critical', 'high', 'medium', 'low'];
+  const orderedPriorities = priorityOrder.map(p =>
+    priorities.find(pr => pr.priority === p) || { priority: p, count: 0 }
+  );
+
+  priorityChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: orderedPriorities.map(p => p.priority.charAt(0).toUpperCase() + p.priority.slice(1)),
+      datasets: [{
+        label: 'Count',
+        data: orderedPriorities.map(p => p.count),
+        backgroundColor: [
+          '#c62828',  // Critical - red
+          '#f57c00',  // High - orange
+          '#0051C3',  // Medium - blue
+          '#757575'   // Low - gray
+        ],
+        borderWidth: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: {
+          display: false
+        },
+        tooltip: {
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+          titleColor: '#fff',
+          bodyColor: '#fff',
+          borderColor: '#F38020',
+          borderWidth: 1,
+          padding: 12
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            precision: 0
+          },
+          grid: {
+            color: 'rgba(0, 0, 0, 0.05)'
+          }
+        },
+        x: {
+          grid: {
+            display: false
+          }
+        }
+      }
+    }
+  });
+}
+
+/**
+ * Render user type chart
+ */
+function renderUserTypeChart(userTypes) {
+  const ctx = document.getElementById('userTypeChart');
+
+  if (userTypeChart) {
+    userTypeChart.destroy();
+  }
+
+  userTypeChart = new Chart(ctx, {
+    type: 'pie',
+    data: {
+      labels: userTypes.map(u => u.user_type.charAt(0).toUpperCase() + u.user_type.slice(1)),
+      datasets: [{
+        data: userTypes.map(u => u.count),
+        backgroundColor: [
+          '#F38020',  // Enterprise - orange
+          '#0051C3',  // Pro - blue
+          '#2e7d32'   // Free - green
+        ],
+        borderWidth: 2,
+        borderColor: '#fff'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            padding: 15,
+            font: {
+              size: 12
+            }
+          }
+        },
+        tooltip: {
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+          titleColor: '#fff',
+          bodyColor: '#fff',
+          borderColor: '#F38020',
+          borderWidth: 1,
+          padding: 12,
+          callbacks: {
+            label: (context) => {
+              const label = context.label || '';
+              const value = context.parsed || 0;
+              const total = userTypes.reduce((sum, u) => sum + u.count, 0);
+              const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+              return `${label}: ${value} (${percentage}%)`;
+            }
+          }
         }
       }
     }
@@ -201,20 +589,25 @@ async function loadTopIssues() {
       return;
     }
 
-    issuesList.innerHTML = data.topIssues.map((issue, index) => `
-      <div class="issue-item ${issue.priority}">
-        <div class="issue-header">
-          <span class="issue-title">${issue.category} - ${issue.priority} priority</span>
-          <span class="issue-count">${issue.count} reports</span>
+    issuesList.innerHTML = data.topIssues.map((issue, index) => {
+      const examples = issue.examples ? issue.examples.split(' | ') : [];
+      const examplesHtml = examples.map(ex => `<p class="example-item">• ${ex}</p>`).join('');
+
+      return `
+        <div class="issue-item ${issue.priority}">
+          <div class="issue-header">
+            <span class="issue-title">${issue.category} - ${issue.priority} priority</span>
+            <span class="issue-count">${issue.count} reports</span>
+          </div>
+          <div class="issue-examples" id="issue-examples-${index}">
+            ${examplesHtml || '<p class="example-item">No examples available</p>'}
+          </div>
+          <button class="read-more-btn" onclick="toggleIssue(${index})">
+            <span id="read-more-text-${index}">Read More ▼</span>
+          </button>
         </div>
-        <div class="issue-examples" id="issue-examples-${index}">
-          ${issue.examples ? issue.examples.split(' | ').join('. ') : 'No examples available'}
-        </div>
-        <button class="read-more-btn" onclick="toggleIssue(${index})">
-          <span id="read-more-text-${index}">Read More ▼</span>
-        </button>
-      </div>
-    `).join('');
+      `;
+    }).join('');
 
   } catch (error) {
     console.error('Failed to load top issues:', error);

@@ -9,13 +9,38 @@
   <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
 </head>
 <body>
+  <!-- Hamburger Menu -->
+  <button class="hamburger" id="hamburger-btn" aria-label="Toggle navigation">
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
+
+  <!-- Side Navigation -->
+  <nav class="side-nav" id="side-nav">
+    <div class="nav-header">
+      <h2>CloudPulse</h2>
+      <button class="close-nav" id="close-nav-btn">&times;</button>
+    </div>
+    <ul class="nav-menu">
+      <li><a href="#overview" data-section="overview">📊 Overview</a></li>
+      <li><a href="#charts" data-section="charts">📈 Charts & Trends</a></li>
+      <li><a href="#issues" data-section="issues">🎯 Top Issues</a></li>
+      <li><a href="#chat" data-section="chat">💬 AI Assistant</a></li>
+      <li><a href="#summary" data-section="summary">📧 Daily Summary</a></li>
+    </ul>
+  </nav>
+
+  <!-- Overlay -->
+  <div class="nav-overlay" id="nav-overlay"></div>
+
   <div class="container">
     <!-- Header with Integrated Date Filter -->
     <header class="header">
       <div class="header-content">
         <div class="header-title">
           <h1>CloudPulse</h1>
-          <p class="subtitle">Know what your customers have to say</p>
+          <p class="subtitle">Cloudflare Workers Feedback Intelligence</p>
         </div>
 
         <!-- Compact Date Filter -->
@@ -53,7 +78,13 @@
     </header>
 
     <!-- Stats Overview -->
-    <section class="stats-grid">
+    <section class="collapsible-section" id="overview">
+      <div class="section-header" onclick="toggleSection('overview')">
+        <h2>📊 Overview</h2>
+        <button class="collapse-btn">▼</button>
+      </div>
+      <div class="section-content">
+        <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-icon">📊</div>
         <div class="stat-content">
@@ -84,13 +115,22 @@
           <div class="stat-label">Trend</div>
           <div class="stat-value" id="trend">-</div>
         </div>
+        </div>
+      </div>
+    </section>
       </div>
     </section>
 
     <!-- Charts Section -->
-    <section class="charts-section">
+    <section class="collapsible-section" id="charts">
+      <div class="section-header" onclick="toggleSection('charts')">
+        <h2>📈 Charts & Trends</h2>
+        <button class="collapse-btn">▼</button>
+      </div>
+      <div class="section-content">
+        <div class="charts-section">
       <div class="chart-card">
-        <h3>Feedback Trends (Last 7 Days)</h3>
+        <h3 id="trends-chart-title">Feedback Trends (Last 7 Days)</h3>
         <canvas id="trendsChart"></canvas>
       </div>
 
@@ -98,20 +138,53 @@
         <h3>Sentiment Distribution</h3>
         <canvas id="sentimentChart"></canvas>
       </div>
+
+      <div class="chart-card">
+        <h3>Feedback by Category</h3>
+        <canvas id="categoryChart"></canvas>
+      </div>
+
+      <div class="chart-card">
+        <h3>Feedback Sources</h3>
+        <canvas id="sourceChart"></canvas>
+      </div>
+
+      <div class="chart-card">
+        <h3>Priority Distribution</h3>
+        <canvas id="priorityChart"></canvas>
+      </div>
+
+      <div class="chart-card">
+        <h3>User Type Breakdown</h3>
+        <canvas id="userTypeChart"></canvas>
+      </div>
+        </div>
+      </div>
+    </section>
+      </div>
     </section>
 
     <!-- Top Issues -->
-    <section class="top-issues">
-      <h2>🎯 Top Issues This Week</h2>
-      <div id="issues-list" class="issues-list">
-        <div class="loading">Loading...</div>
+    <section class="collapsible-section" id="issues">
+      <div class="section-header" onclick="toggleSection('issues')">
+        <h2>🎯 Top Issues This Week</h2>
+        <button class="collapse-btn">▼</button>
+      </div>
+      <div class="section-content">
+        <div id="issues-list" class="issues-list">
+          <div class="loading">Loading...</div>
+        </div>
       </div>
     </section>
 
     <!-- AI Chat Agent -->
-    <section class="chat-section">
-      <h2>💬 Ask the AI Agent</h2>
-      <div class="chat-container">
+    <section class="collapsible-section" id="chat">
+      <div class="section-header" onclick="toggleSection('chat')">
+        <h2>💬 Ask the AI Agent</h2>
+        <button class="collapse-btn">▼</button>
+      </div>
+      <div class="section-content">
+        <div class="chat-container">
         <div class="chat-messages" id="chat-messages">
           <div class="message assistant">
             <div class="message-content">
@@ -136,14 +209,21 @@
         </div>
       </div>
     </section>
+      </div>
+    </section>
 
     <!-- Daily Summary -->
-    <section class="daily-summary">
-      <h2>📧 Latest Daily Summary</h2>
-      <div id="summary-content" class="summary-content">
-        <div class="loading">Loading...</div>
+    <section class="collapsible-section" id="summary">
+      <div class="section-header" onclick="toggleSection('summary')">
+        <h2>📧 Latest Daily Summary</h2>
+        <button class="collapse-btn">▼</button>
       </div>
-      <button id="generate-summary-btn" class="secondary-btn">Generate New Summary</button>
+      <div class="section-content">
+        <div id="summary-content" class="summary-content">
+          <div class="loading">Loading...</div>
+        </div>
+        <button id="generate-summary-btn" class="secondary-btn">Generate New Summary</button>
+      </div>
     </section>
 
     <!-- Footer -->
