@@ -23,11 +23,11 @@
       <button class="close-nav" id="close-nav-btn">&times;</button>
     </div>
     <ul class="nav-menu">
-      <li><a href="#overview" data-section="overview">📊 Overview</a></li>
-      <li><a href="#charts" data-section="charts">📈 Charts & Trends</a></li>
+      <li><a href="#overview" data-section="overview">📊 Quick Stats</a></li>
+      <li><a href="#chat" data-section="chat">🤖 AI Agent</a></li>
       <li><a href="#issues" data-section="issues">🎯 Top Issues</a></li>
-      <li><a href="#chat" data-section="chat">💬 AI Assistant</a></li>
-      <li><a href="#summary" data-section="summary">📧 Daily Summary</a></li>
+      <li><a href="#charts" data-section="charts">📈 Analytics</a></li>
+      <li><a href="#summary" data-section="summary">📧 Slack Summary</a></li>
     </ul>
   </nav>
 
@@ -35,99 +35,122 @@
   <div class="nav-overlay" id="nav-overlay"></div>
 
   <div class="container">
-    <!-- Header with Integrated Date Filter -->
+    <!-- Header -->
     <header class="header">
       <div class="header-content">
         <div class="header-title">
           <h1>CloudPulse</h1>
-          <p class="subtitle">Cloudflare Workers Feedback Intelligence</p>
-        </div>
-
-        <!-- Compact Date Filter -->
-        <div class="date-filter-compact">
-          <div class="quick-filters-compact">
-            <button class="quick-filter-btn active" data-days="7">7D</button>
-            <button class="quick-filter-btn" data-days="14">14D</button>
-            <button class="quick-filter-btn" data-days="30">30D</button>
-            <button class="quick-filter-btn" data-days="90">90D</button>
-          </div>
-          <div class="custom-date-toggle">
-            <button id="toggle-custom-date" class="icon-btn" title="Custom Date Range">
-              📅
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Custom Date Picker Dropdown (Hidden by default) -->
-      <div id="custom-date-panel" class="custom-date-panel hidden">
-        <div class="date-picker-row">
-          <div class="date-input-group-compact">
-            <label>From</label>
-            <input type="date" id="start-date" class="date-input-compact">
-          </div>
-          <div class="date-separator">→</div>
-          <div class="date-input-group-compact">
-            <label>To</label>
-            <input type="date" id="end-date" class="date-input-compact">
-          </div>
-          <button id="apply-filter-btn" class="apply-btn">Apply</button>
-          <button id="close-custom-date" class="close-btn">✕</button>
+          <p class="subtitle">AI-Powered Feedback Intelligence for Cloudflare Workers</p>
         </div>
       </div>
     </header>
 
-    <!-- Stats Overview -->
-    <section class="collapsible-section" id="overview">
-      <div class="section-header" onclick="toggleSection('overview')">
-        <h2>📊 Overview</h2>
-        <button class="collapse-btn">▼</button>
-      </div>
-      <div class="section-content">
-        <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-icon">📊</div>
-        <div class="stat-content">
-          <div class="stat-label" id="stat-label-total">Total Feedback</div>
-          <div class="stat-value" id="total-7days">-</div>
+    <!-- Quick Stats Overview -->
+    <section class="compact-overview" id="overview">
+      <div class="stats-grid-compact">
+        <div class="stat-card-compact">
+          <div class="stat-icon">📊</div>
+          <div class="stat-content">
+            <div class="stat-label" id="stat-label-total">Total Feedback</div>
+            <div class="stat-value" id="total-7days">-</div>
+          </div>
         </div>
-      </div>
 
-      <div class="stat-card">
-        <div class="stat-icon">😊</div>
-        <div class="stat-content">
-          <div class="stat-label">Positive Sentiment</div>
-          <div class="stat-value" id="positive-sentiment">-</div>
+        <div class="stat-card-compact">
+          <div class="stat-icon">😊</div>
+          <div class="stat-content">
+            <div class="stat-label">Positive Sentiment</div>
+            <div class="stat-value" id="positive-sentiment">-</div>
+          </div>
         </div>
-      </div>
 
-      <div class="stat-card">
-        <div class="stat-icon">🚨</div>
-        <div class="stat-content">
-          <div class="stat-label">Critical Issues</div>
-          <div class="stat-value" id="critical-issues">-</div>
+        <div class="stat-card-compact">
+          <div class="stat-icon">🚨</div>
+          <div class="stat-content">
+            <div class="stat-label">Critical Issues</div>
+            <div class="stat-value" id="critical-issues">-</div>
+          </div>
         </div>
-      </div>
 
-      <div class="stat-card">
-        <div class="stat-icon">📈</div>
-        <div class="stat-content">
-          <div class="stat-label">Trend</div>
-          <div class="stat-value" id="trend">-</div>
-        </div>
+        <div class="stat-card-compact">
+          <div class="stat-icon">📈</div>
+          <div class="stat-content">
+            <div class="stat-label">Trend</div>
+            <div class="stat-value" id="trend">-</div>
+          </div>
         </div>
       </div>
     </section>
+
+    <!-- AI Chat Agent - MAIN FEATURE -->
+    <section class="ai-hero-section" id="chat">
+      <div class="ai-hero-header">
+        <h2>🤖 Ask the AI Agent Anything</h2>
+        <p class="ai-hero-subtitle">Get instant insights from customer feedback using AI</p>
+      </div>
+      <div class="chat-container">
+        <div class="chat-messages" id="chat-messages">
+          <div class="message assistant">
+            <div class="message-content">
+              Hello! I'm your AI feedback analyst. Ask me anything about Workers customer feedback. Try questions like:
+              <ul>
+                <li>"What are the top 3 issues this week?"</li>
+                <li>"Show me critical bugs from enterprise customers"</li>
+                <li>"What's the sentiment trend around performance?"</li>
+                <li>"Are there any recurring complaints?"</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="chat-input-container">
+          <input
+            type="text"
+            id="chat-input"
+            class="chat-input"
+            placeholder="Ask about feedback trends, issues, or specific features..."
+            autofocus
+          />
+          <button id="send-btn" class="send-btn">Send</button>
+        </div>
       </div>
     </section>
 
     <!-- Charts Section -->
-    <section class="collapsible-section" id="charts">
+    <section class="collapsible-section collapsed" id="charts">
       <div class="section-header" onclick="toggleSection('charts')">
-        <h2>📈 Charts & Trends</h2>
+        <h2>📈 Detailed Analytics</h2>
         <button class="collapse-btn">▼</button>
       </div>
       <div class="section-content">
+        <!-- Date Filter -->
+        <div class="date-filter-controls">
+          <label>Date Range:</label>
+          <div class="quick-filters-inline">
+            <button class="quick-filter-btn active" data-days="7">7D</button>
+            <button class="quick-filter-btn" data-days="14">14D</button>
+            <button class="quick-filter-btn" data-days="30">30D</button>
+            <button class="quick-filter-btn" data-days="90">90D</button>
+            <button id="toggle-custom-date-inline" class="icon-btn-small" title="Custom Date Range">📅</button>
+          </div>
+        </div>
+
+        <!-- Custom Date Picker (Hidden by default) -->
+        <div id="custom-date-panel" class="custom-date-panel hidden">
+          <div class="date-picker-row">
+            <div class="date-input-group-compact">
+              <label>From</label>
+              <input type="date" id="start-date" class="date-input-compact">
+            </div>
+            <div class="date-separator">→</div>
+            <div class="date-input-group-compact">
+              <label>To</label>
+              <input type="date" id="end-date" class="date-input-compact">
+            </div>
+            <button id="apply-filter-btn" class="apply-btn">Apply</button>
+            <button id="close-custom-date" class="close-btn">✕</button>
+          </div>
+        </div>
+
         <div class="charts-section">
       <div class="chart-card">
         <h3 id="trends-chart-title">Feedback Trends (Last 7 Days)</h3>
@@ -177,48 +200,14 @@
       </div>
     </section>
 
-    <!-- AI Chat Agent -->
-    <section class="collapsible-section" id="chat">
-      <div class="section-header" onclick="toggleSection('chat')">
-        <h2>💬 Ask the AI Agent</h2>
-        <button class="collapse-btn">▼</button>
-      </div>
-      <div class="section-content">
-        <div class="chat-container">
-        <div class="chat-messages" id="chat-messages">
-          <div class="message assistant">
-            <div class="message-content">
-              Hello! I'm your feedback intelligence assistant. Ask me anything about customer feedback, trends, or specific issues. For example:
-              <ul>
-                <li>"What are the top performance issues this week?"</li>
-                <li>"Show me critical bugs from enterprise customers"</li>
-                <li>"What's the sentiment around Workers AI?"</li>
-                <li>"Are there any D1 database complaints?"</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-        <div class="chat-input-container">
-          <input
-            type="text"
-            id="chat-input"
-            class="chat-input"
-            placeholder="Ask about feedback trends, issues, or specific products..."
-          />
-          <button id="send-btn" class="send-btn">Send</button>
-        </div>
-      </div>
-    </section>
-      </div>
-    </section>
-
     <!-- Daily Summary -->
-    <section class="collapsible-section" id="summary">
+    <section class="collapsible-section collapsed" id="summary">
       <div class="section-header" onclick="toggleSection('summary')">
-        <h2>📧 Latest Daily Summary</h2>
+        <h2>📧 Daily Summary (for Slack)</h2>
         <button class="collapse-btn">▼</button>
       </div>
       <div class="section-content">
+        <p class="summary-description">Preview the daily summary that would be sent to Slack, with a link back to this dashboard.</p>
         <div id="summary-content" class="summary-content">
           <div class="loading">Loading...</div>
         </div>

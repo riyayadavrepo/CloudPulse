@@ -596,14 +596,17 @@ async function loadTopIssues() {
       return `
         <div class="issue-item ${issue.priority}">
           <div class="issue-header">
-            <span class="issue-title">${issue.category} - ${issue.priority} priority</span>
+            <div>
+              <span class="issue-title">${issue.category.charAt(0).toUpperCase() + issue.category.slice(1)} Issue</span>
+              <span class="issue-priority-badge ${issue.priority}">${issue.priority.toUpperCase()}</span>
+            </div>
             <span class="issue-count">${issue.count} reports</span>
           </div>
-          <div class="issue-examples" id="issue-examples-${index}">
+          <div class="issue-examples hidden" id="issue-examples-${index}">
             ${examplesHtml || '<p class="example-item">No examples available</p>'}
           </div>
-          <button class="read-more-btn" onclick="toggleIssue(${index})">
-            <span id="read-more-text-${index}">Read More ▼</span>
+          <button class="view-examples-btn" onclick="toggleIssueExamples(${index})">
+            <span id="view-examples-text-${index}">📝 View Example Feedback</span>
           </button>
         </div>
       `;
@@ -616,18 +619,18 @@ async function loadTopIssues() {
 }
 
 /**
- * Toggle issue expansion
+ * Toggle issue examples visibility
  */
-function toggleIssue(index) {
+function toggleIssueExamples(index) {
   const examplesEl = document.getElementById(`issue-examples-${index}`);
-  const textEl = document.getElementById(`read-more-text-${index}`);
+  const textEl = document.getElementById(`view-examples-text-${index}`);
 
-  if (examplesEl.classList.contains('expanded')) {
-    examplesEl.classList.remove('expanded');
-    textEl.textContent = 'Read More ▼';
+  if (examplesEl.classList.contains('hidden')) {
+    examplesEl.classList.remove('hidden');
+    textEl.textContent = '🔼 Hide Examples';
   } else {
-    examplesEl.classList.add('expanded');
-    textEl.textContent = 'Read Less ▲';
+    examplesEl.classList.add('hidden');
+    textEl.textContent = '📝 View Example Feedback';
   }
 }
 
@@ -785,9 +788,11 @@ async function loadLatestSummary() {
       ? marked.parse(data.summary)
       : data.summary.replace(/\n/g, '<br>');
 
+    const dashboardUrl = window.location.origin + window.location.pathname;
+
     summaryContent.innerHTML = `
       <div class="summary-slack">
-        <h3>Daily Feedback Summary - ${data.date}</h3>
+        <h3>📊 Daily Feedback Summary - ${data.date}</h3>
         ${data.stats ? `
           <div class="summary-fields">
             <div class="summary-field">
@@ -809,6 +814,15 @@ async function loadLatestSummary() {
           </div>
         ` : ''}
         <div style="margin-top: 16px;">${summaryHtml}</div>
+        <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.2);">
+          <strong>🔗 Explore in Detail:</strong><br>
+          <a href="${dashboardUrl}" style="color: #F38020; text-decoration: underline;" target="_blank">
+            Open CloudPulse Dashboard →
+          </a>
+          <p style="font-size: 0.9rem; margin-top: 8px; opacity: 0.9;">
+            Use the AI agent to ask questions, filter by date range, and dive into analytics.
+          </p>
+        </div>
       </div>
     `;
 
@@ -873,7 +887,7 @@ function setupDateFilters() {
   const startDateInput = document.getElementById('start-date');
   const endDateInput = document.getElementById('end-date');
   const applyBtn = document.getElementById('apply-filter-btn');
-  const toggleBtn = document.getElementById('toggle-custom-date');
+  const toggleBtn = document.getElementById('toggle-custom-date-inline');
   const closeBtn = document.getElementById('close-custom-date');
   const customPanel = document.getElementById('custom-date-panel');
   const quickFilterBtns = document.querySelectorAll('.quick-filter-btn');
