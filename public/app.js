@@ -201,21 +201,40 @@ async function loadTopIssues() {
       return;
     }
 
-    issuesList.innerHTML = data.topIssues.map(issue => `
+    issuesList.innerHTML = data.topIssues.map((issue, index) => `
       <div class="issue-item ${issue.priority}">
         <div class="issue-header">
           <span class="issue-title">${issue.category} - ${issue.priority} priority</span>
           <span class="issue-count">${issue.count} reports</span>
         </div>
-        <div class="issue-examples">
-          ${issue.examples ? issue.examples.split(' | ').slice(0, 2).join('. ') + '...' : 'No examples available'}
+        <div class="issue-examples" id="issue-examples-${index}">
+          ${issue.examples ? issue.examples.split(' | ').join('. ') : 'No examples available'}
         </div>
+        <button class="read-more-btn" onclick="toggleIssue(${index})">
+          <span id="read-more-text-${index}">Read More ▼</span>
+        </button>
       </div>
     `).join('');
 
   } catch (error) {
     console.error('Failed to load top issues:', error);
     document.getElementById('issues-list').innerHTML = '<p class="loading">Failed to load issues</p>';
+  }
+}
+
+/**
+ * Toggle issue expansion
+ */
+function toggleIssue(index) {
+  const examplesEl = document.getElementById(`issue-examples-${index}`);
+  const textEl = document.getElementById(`read-more-text-${index}`);
+
+  if (examplesEl.classList.contains('expanded')) {
+    examplesEl.classList.remove('expanded');
+    textEl.textContent = 'Read More ▼';
+  } else {
+    examplesEl.classList.add('expanded');
+    textEl.textContent = 'Read Less ▲';
   }
 }
 
@@ -301,7 +320,13 @@ function addMessageToChat(role, content) {
 
   const contentDiv = document.createElement('div');
   contentDiv.className = 'message-content';
-  contentDiv.textContent = content;
+
+  // Render markdown for assistant messages
+  if (role === 'assistant' && typeof marked !== 'undefined') {
+    contentDiv.innerHTML = marked.parse(content);
+  } else {
+    contentDiv.textContent = content;
+  }
 
   messageDiv.appendChild(contentDiv);
   messagesContainer.appendChild(messageDiv);
@@ -362,7 +387,11 @@ async function loadLatestSummary() {
       return;
     }
 
-    // Display summary with Slack-style formatting
+    // Display summary with Slack-style formatting and markdown
+    const summaryHtml = typeof marked !== 'undefined'
+      ? marked.parse(data.summary)
+      : data.summary.replace(/\n/g, '<br>');
+
     summaryContent.innerHTML = `
       <div class="summary-slack">
         <h3>Daily Feedback Summary - ${data.date}</h3>
@@ -386,7 +415,7 @@ async function loadLatestSummary() {
             </div>
           </div>
         ` : ''}
-        <div style="white-space: pre-wrap; margin-top: 16px;">${data.summary}</div>
+        <div style="margin-top: 16px;">${summaryHtml}</div>
       </div>
     `;
 
