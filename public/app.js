@@ -176,13 +176,28 @@ function renderSentimentChart(sentiment) {
  */
 async function loadTopIssues() {
   try {
-    const response = await fetch(`${API_BASE}/api/stats`);
+    // Build URL with date parameters if set
+    let url = `${API_BASE}/api/stats`;
+    const params = new URLSearchParams();
+
+    if (currentDateRange.startDate) {
+      params.append('startDate', currentDateRange.startDate);
+    }
+    if (currentDateRange.endDate) {
+      params.append('endDate', currentDateRange.endDate);
+    }
+
+    if (params.toString()) {
+      url += `?${params.toString()}`;
+    }
+
+    const response = await fetch(url);
     const data = await response.json();
 
     const issuesList = document.getElementById('issues-list');
 
     if (!data.topIssues || data.topIssues.length === 0) {
-      issuesList.innerHTML = '<p class="loading">No critical or high priority issues found this week!</p>';
+      issuesList.innerHTML = '<p class="loading">No critical or high priority issues found in this period!</p>';
       return;
     }
 
