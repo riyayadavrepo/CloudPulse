@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CloudPulse</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
+</head>
+<body>
+  <div class="dashboard">
+    <!-- Sticky Header with Key Metrics -->
+    <header class="sticky-header">
+      <div class="header-brand">
+        <h1>CloudPulse</h1>
+        <p class="subtitle">What customers have to say about Workers AI</p>
+      </div>
+      <div class="header-stats">
+        <div class="header-stat">
+          <span class="stat-value" id="header-total">-</span>
+          <span class="stat-label">Feedback</span>
+        </div>
+        <div class="header-stat">
+          <span class="stat-value" id="header-sentiment">-</span>
+          <span class="stat-label">Positive</span>
+        </div>
+        <div class="header-stat critical">
+          <span class="stat-value" id="header-critical">-</span>
+          <span class="stat-label">Critical</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Tab Navigation -->
+    <nav class="tab-nav">
+      <button class="tab-btn active" data-tab="overview">📊 Overview</button>
+      <button class="tab-btn" data-tab="issues">🎯 Top Issues</button>
+      <button class="tab-btn" data-tab="analytics">📈 Analytics</button>
+      <button class="tab-btn" data-tab="summary">📧 Daily Summary</button>
+    </nav>
+
+    <!-- Tab Content Container -->
+    <div class="tab-content-container">
+
+      <!-- Overview Tab -->
+      <div class="tab-content active" id="tab-overview">
+      <div class="stats-grid-compact">
+        <div class="stat-card-compact">
+          <div class="stat-icon">📊</div>
+          <div class="stat-content">
+            <div class="stat-label" id="stat-label-total">Total Feedback</div>
+            <div class="stat-value" id="total-7days">-</div>
+          </div>
+        </div>
+
+        <div class="stat-card-compact">
+          <div class="stat-icon">😊</div>
+          <div class="stat-content">
+            <div class="stat-label">Positive Sentiment</div>
+            <div class="stat-value" id="positive-sentiment">-</div>
+          </div>
+        </div>
+
+        <div class="stat-card-compact">
+          <div class="stat-icon">🚨</div>
+          <div class="stat-content">
+            <div class="stat-label">Critical Issues</div>
+            <div class="stat-value" id="critical-issues">-</div>
+          </div>
+        </div>
+
+        <div class="stat-card-compact">
+          <div class="stat-icon">📈</div>
+          <div class="stat-content">
+            <div class="stat-label">Trend</div>
+            <div class="stat-value" id="trend">-</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- AI Chat Agent - MAIN FEATURE -->
+    <section class="ai-hero-section" id="chat">
+      <div class="ai-hero-header">
+        <h2>🤖 Ask the AI Agent Anything</h2>
+        <p class="ai-hero-subtitle">Get instant insights from customer feedback using AI</p>
+      </div>
+      <div class="chat-container">
+        <div class="chat-messages" id="chat-messages">
+          <div class="message assistant">
+            <div class="message-content">
+              Hello! I'm your AI feedback analyst. Ask me anything about Workers customer feedback. Try questions like:
+              <ul>
+                <li>"What are the top 3 issues this week?"</li>
+                <li>"Show me critical bugs from enterprise customers"</li>
+                <li>"What's the sentiment trend around performance?"</li>
+                <li>"Are there any recurring complaints?"</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="chat-input-container">
+          <input
+            type="text"
+            id="chat-input"
+            class="chat-input"
+            placeholder="Ask about feedback trends, issues, or specific features..."
+            autofocus
+          />
+          <button id="send-btn" class="send-btn">Send</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Charts Section -->
+    <section class="collapsible-section collapsed" id="charts">
+      <div class="section-header" onclick="toggleSection('charts')">
+        <h2>📈 Detailed Analytics</h2>
+        <button class="collapse-btn">▼</button>
+      </div>
+      <div class="section-content">
+        <!-- Date Filter -->
+        <div class="date-filter-controls">
+          <label>Date Range:</label>
+          <div class="quick-filters-inline">
+            <button class="quick-filter-btn active" data-days="7">7D</button>
+            <button class="quick-filter-btn" data-days="14">14D</button>
+            <button class="quick-filter-btn" data-days="30">30D</button>
+            <button class="quick-filter-btn" data-days="90">90D</button>
+            <button id="toggle-custom-date-inline" class="icon-btn-small" title="Custom Date Range">📅</button>
+          </div>
+        </div>
+
+        <!-- Custom Date Picker (Hidden by default) -->
+        <div id="custom-date-panel" class="custom-date-panel hidden">
+          <div class="date-picker-row">
+            <div class="date-input-group-compact">
+              <label>From</label>
+              <input type="date" id="start-date" class="date-input-compact">
+            </div>
+            <div class="date-separator">→</div>
+            <div class="date-input-group-compact">
+              <label>To</label>
+              <input type="date" id="end-date" class="date-input-compact">
+            </div>
+            <button id="apply-filter-btn" class="apply-btn">Apply</button>
+            <button id="close-custom-date" class="close-btn">✕</button>
+          </div>
+        </div>
+
+        <div class="charts-section">
+      <div class="chart-card">
+        <h3 id="trends-chart-title">Feedback Trends (Last 7 Days)</h3>
+        <canvas id="trendsChart"></canvas>
+      </div>
+
+      <div class="chart-card">
+        <h3>Sentiment Distribution</h3>
+        <canvas id="sentimentChart"></canvas>
+      </div>
+
+      <div class="chart-card">
+        <h3>Feedback by Category</h3>
+        <canvas id="categoryChart"></canvas>
+      </div>
+
+      <div class="chart-card">
+        <h3>Feedback Sources</h3>
+        <canvas id="sourceChart"></canvas>
+      </div>
+
+      <div class="chart-card">
+        <h3>Priority Distribution</h3>
+        <canvas id="priorityChart"></canvas>
+      </div>
+
+      <div class="chart-card">
+        <h3>User Type Breakdown</h3>
+        <canvas id="userTypeChart"></canvas>
+      </div>
+        </div>
+      </div>
+    </section>
+      </div>
+    </section>
+
+    <!-- Top Issues -->
+    <section class="collapsible-section" id="issues">
+      <div class="section-header" onclick="toggleSection('issues')">
+        <h2>🎯 Top Issues This Week</h2>
+        <button class="collapse-btn">▼</button>
+      </div>
+      <div class="section-content">
+        <div id="issues-list" class="issues-list">
+          <div class="loading">Loading...</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Daily Summary -->
+    <section class="collapsible-section collapsed" id="summary">
+      <div class="section-header" onclick="toggleSection('summary')">
+        <h2>📧 Daily Summary (for Slack)</h2>
+        <button class="collapse-btn">▼</button>
+      </div>
+      <div class="section-content">
+        <p class="summary-description">Preview the daily summary that would be sent to Slack, with a link back to this dashboard.</p>
+        <div id="summary-content" class="summary-content">
+          <div class="loading">Loading...</div>
+        </div>
+        <button id="generate-summary-btn" class="secondary-btn">Generate New Summary</button>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <p>Built with Cloudflare Workers, Pages, D1, and Workers AI</p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

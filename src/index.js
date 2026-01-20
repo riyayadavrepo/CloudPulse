@@ -327,7 +327,26 @@ Only respond with the JSON object, nothing else.`;
     // Parse AI response to extract JSON
     const jsonMatch = response.response.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
-      return JSON.parse(jsonMatch[0]);
+      const parsed = JSON.parse(jsonMatch[0]);
+
+      // Ensure keywords is always an array
+      if (parsed.keywords && !Array.isArray(parsed.keywords)) {
+        if (typeof parsed.keywords === 'string') {
+          parsed.keywords = parsed.keywords.split(',').map(k => k.trim());
+        } else {
+          parsed.keywords = [];
+        }
+      }
+
+      // Set defaults if missing
+      parsed.keywords = parsed.keywords || [];
+
+      // Ensure category is a single value or null, not an array
+      if (parsed.category && typeof parsed.category !== 'string') {
+        parsed.category = null;
+      }
+
+      return parsed;
     }
 
     // Fallback to default query
@@ -403,11 +422,8 @@ async function fetchRelevantFeedback(env, analysis, originalQuery) {
 
   sql += ' ORDER BY created_at DESC LIMIT 50';
 
-  // Execute query
-  let stmt = env.DB.prepare(sql);
-  for (const binding of bindings) {
-    stmt = stmt.bind(binding);
-  }
+  // Execute query - bind all parameters at once
+  const stmt = env.DB.prepare(sql).bind(...bindings);
   const results = await stmt.all();
 
   // Get aggregated statistics

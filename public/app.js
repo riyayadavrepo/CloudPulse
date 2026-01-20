@@ -18,8 +18,8 @@ let currentDateRange = {
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => {
-  setupHamburgerMenu();
-  setupCollapsibleSections();
+  setupTabs();
+  setupFloatingBubble();
   setupDateFilters();
   loadDashboardStats();
   loadTopIssues();
@@ -29,68 +29,72 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /**
- * Setup hamburger menu
+ * Setup tab navigation
  */
-function setupHamburgerMenu() {
-  const hamburger = document.getElementById('hamburger-btn');
-  const sideNav = document.getElementById('side-nav');
-  const overlay = document.getElementById('nav-overlay');
-  const closeBtn = document.getElementById('close-nav-btn');
-  const navLinks = document.querySelectorAll('.nav-menu a');
+function setupTabs() {
+  const tabBtns = document.querySelectorAll('.tab-btn');
+  const tabContents = document.querySelectorAll('.tab-content');
 
-  // Toggle menu
-  hamburger.addEventListener('click', () => {
-    hamburger.classList.toggle('active');
-    sideNav.classList.toggle('active');
-    overlay.classList.toggle('active');
-  });
+  tabBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const targetTab = btn.dataset.tab;
 
-  // Close menu
-  closeBtn.addEventListener('click', closeMenu);
-  overlay.addEventListener('click', closeMenu);
+      // Remove active class from all buttons and contents
+      tabBtns.forEach(b => b.classList.remove('active'));
+      tabContents.forEach(c => c.classList.remove('active'));
 
-  // Navigate to section
-  navLinks.forEach(link => {
-    link.addEventListener('click', (e) => {
-      e.preventDefault();
-      const sectionId = link.getAttribute('data-section');
-      const section = document.getElementById(sectionId);
-      if (section) {
-        closeMenu();
-        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        // Expand section if collapsed
-        if (section.classList.contains('collapsed')) {
-          toggleSection(sectionId);
-        }
+      // Add active class to clicked button and corresponding content
+      btn.classList.add('active');
+      const targetContent = document.getElementById(`tab-${targetTab}`);
+      if (targetContent) {
+        targetContent.classList.add('active');
       }
     });
   });
-
-  function closeMenu() {
-    hamburger.classList.remove('active');
-    sideNav.classList.remove('active');
-    overlay.classList.remove('active');
-  }
 }
 
 /**
- * Setup collapsible sections
+ * Setup floating AI chat bubble
  */
-function setupCollapsibleSections() {
-  // Start with all sections expanded
-  const sections = document.querySelectorAll('.collapsible-section');
-  sections.forEach(section => {
-    section.classList.remove('collapsed');
+function setupFloatingBubble() {
+  const bubbleTrigger = document.getElementById('bubble-trigger');
+  const bubbleWindow = document.getElementById('bubble-window');
+  const bubbleClose = document.getElementById('bubble-close');
+
+  // Toggle bubble window
+  bubbleTrigger.addEventListener('click', () => {
+    bubbleWindow.classList.toggle('hidden');
+  });
+
+  // Close bubble window
+  bubbleClose.addEventListener('click', () => {
+    bubbleWindow.classList.add('hidden');
   });
 }
 
 /**
- * Toggle section collapse/expand
+ * Update sticky header metrics
  */
-function toggleSection(sectionId) {
-  const section = document.getElementById(sectionId);
-  if (section) {
-    section.classList.toggle('collapsed');
+function updateStickyHeader(stats) {
+  const headerTotal = document.getElementById('header-total');
+  const headerSentiment = document.getElementById('header-sentiment');
+  const headerCritical = document.getElementById('header-critical');
+
+  if (headerTotal && stats.overview) {
+    headerTotal.textContent = stats.overview.total_7days || 0;
+  }
+
+  if (headerSentiment && stats.sentiment) {
+    const totalSentiment = (stats.sentiment.positive || 0) + (stats.sentiment.negative || 0) + (stats.sentiment.neutral || 0);
+    const positivePercent = totalSentiment > 0
+      ? Math.round((stats.sentiment.positive || 0) / totalSentiment * 100)
+      : 0;
+    headerSentiment.textContent = `${positivePercent}%`;
+  }
+
+  if (headerCritical && stats.priorities) {
+    const criticalCount = stats.priorities.find(p => p.priority === 'critical')?.count || 0;
+    headerCritical.textContent = criticalCount;
   }
 }
 
@@ -117,38 +121,55 @@ async function loadDashboardStats() {
     const response = await fetch(url);
     const data = await response.json();
 
-    // Update date range label
+    // Update sticky header with latest stats
+    updateStickyHeader(data);
+
+    // Update date range label (if element exists in old layout)
     const labelEl = document.getElementById('stat-label-total');
-    if (currentDateRange.startDate && currentDateRange.endDate) {
-      const start = new Date(currentDateRange.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      const end = new Date(currentDateRange.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      labelEl.textContent = `Total Feedback (${start} - ${end})`;
-    } else {
-      labelEl.textContent = 'Total Feedback (Last 7 days)';
+    if (labelEl) {
+      if (currentDateRange.startDate && currentDateRange.endDate) {
+        const start = new Date(currentDateRange.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        const end = new Date(currentDateRange.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        labelEl.textContent = `Total Feedback (${start} - ${end})`;
+      } else {
+        labelEl.textContent = 'Total Feedback (Last 7 days)';
+      }
     }
 
-    // Update stat cards
-    document.getElementById('total-7days').textContent = data.overview.total_7days;
+    // Update stat cards (if elements exist in old layout)
+    const total7daysEl = document.getElementById('total-7days');
+    if (total7daysEl) {
+      total7daysEl.textContent = data.overview.total_7days;
+    }
 
     const totalSentiment = (data.sentiment.positive || 0) + (data.sentiment.negative || 0) + (data.sentiment.neutral || 0);
     const positivePercent = totalSentiment > 0
       ? Math.round((data.sentiment.positive || 0) / totalSentiment * 100)
       : 0;
-    document.getElementById('positive-sentiment').textContent = `${positivePercent}%`;
+
+    const positiveSentimentEl = document.getElementById('positive-sentiment');
+    if (positiveSentimentEl) {
+      positiveSentimentEl.textContent = `${positivePercent}%`;
+    }
 
     const criticalCount = data.priorities.find(p => p.priority === 'critical')?.count || 0;
-    document.getElementById('critical-issues').textContent = criticalCount;
+    const criticalIssuesEl = document.getElementById('critical-issues');
+    if (criticalIssuesEl) {
+      criticalIssuesEl.textContent = criticalCount;
+    }
 
-    // Calculate trend
+    // Calculate trend (for trend display if it exists)
     if (data.trends.length >= 2) {
       const recent = data.trends[data.trends.length - 1].count;
       const previous = data.trends[data.trends.length - 2].count;
       const change = recent - previous;
       const trendText = change > 0 ? `+${change}` : change.toString();
-      const trendColor = change > 0 ? '#f57c00' : '#2e7d32';
-      const trendEl = document.getElementById('trend');
-      trendEl.textContent = trendText;
-      trendEl.style.color = 'white';
+
+      const trendEl = document.getElementById('trend-display');
+      if (trendEl) {
+        trendEl.textContent = trendText;
+        trendEl.style.color = change > 0 ? '#f57c00' : '#2e7d32';
+      }
     }
 
     // Render charts
@@ -170,19 +191,18 @@ async function loadDashboardStats() {
  */
 function renderTrendsChart(trends) {
   const ctx = document.getElementById('trendsChart');
+  if (!ctx) return;
 
   if (trendsChart) {
     trendsChart.destroy();
   }
 
-  // Update chart title with date range
-  const chartTitle = document.getElementById('trends-chart-title');
-  if (chartTitle && currentDateRange.startDate && currentDateRange.endDate) {
-    const start = new Date(currentDateRange.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    const end = new Date(currentDateRange.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    chartTitle.textContent = `Feedback Trends (${start} - ${end})`;
-  } else if (chartTitle) {
-    chartTitle.textContent = 'Feedback Trends (Last 7 Days)';
+  // Update chart title based on actual date range
+  const titleEl = document.getElementById('trends-chart-title');
+  if (titleEl && trends.length > 0) {
+    const startDate = new Date(trends[0].date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const endDate = new Date(trends[trends.length - 1].date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    titleEl.textContent = `Feedback Trends (${startDate} - ${endDate})`;
   }
 
   trendsChart = new Chart(ctx, {
@@ -253,6 +273,7 @@ function renderTrendsChart(trends) {
  */
 function renderSentimentChart(sentiment) {
   const ctx = document.getElementById('sentimentChart');
+  if (!ctx) return;
 
   if (sentimentChart) {
     sentimentChart.destroy();
@@ -271,9 +292,9 @@ function renderSentimentChart(sentiment) {
           sentiment.negative || 0
         ],
         backgroundColor: [
-          '#2e7d32',  // Green for positive
-          '#757575',  // Gray for neutral
-          '#c62828'   // Red for negative
+          '#10b981',  // Green for positive
+          '#6b7280',  // Gray for neutral
+          '#ef4444'   // Red for negative
         ],
         borderWidth: 2,
         borderColor: '#fff'
@@ -318,6 +339,7 @@ function renderSentimentChart(sentiment) {
  */
 function renderCategoryChart(categories) {
   const ctx = document.getElementById('categoryChart');
+  if (!ctx) return;
 
   if (categoryChart) {
     categoryChart.destroy();
@@ -331,12 +353,12 @@ function renderCategoryChart(categories) {
         label: 'Count',
         data: categories.map(c => c.count),
         backgroundColor: [
-          '#F38020',
-          '#0051C3',
-          '#2e7d32',
-          '#f57c00',
-          '#c62828',
-          '#757575'
+          '#F38020',  // Primary orange
+          '#FF8833',  // Light orange
+          '#D16D1A',  // Dark orange
+          '#FFA85C',  // Lighter orange
+          '#C25A0F',  // Darker orange
+          '#FFB976'   // Lightest orange
         ],
         borderWidth: 0
       }]
@@ -383,6 +405,7 @@ function renderCategoryChart(categories) {
  */
 function renderSourceChart(sources) {
   const ctx = document.getElementById('sourceChart');
+  if (!ctx) return;
 
   if (sourceChart) {
     sourceChart.destroy();
@@ -395,11 +418,11 @@ function renderSourceChart(sources) {
       datasets: [{
         data: sources.map(s => s.count),
         backgroundColor: [
-          '#F38020',
-          '#0051C3',
-          '#2e7d32',
-          '#f57c00',
-          '#c62828'
+          '#F38020',  // Primary orange
+          '#FF8833',  // Light orange
+          '#D16D1A',  // Dark orange
+          '#FFA85C',  // Lighter orange
+          '#C25A0F'   // Darker orange
         ],
         borderWidth: 2,
         borderColor: '#fff'
@@ -436,6 +459,7 @@ function renderSourceChart(sources) {
  */
 function renderPriorityChart(priorities) {
   const ctx = document.getElementById('priorityChart');
+  if (!ctx) return;
 
   if (priorityChart) {
     priorityChart.destroy();
@@ -504,6 +528,7 @@ function renderPriorityChart(priorities) {
  */
 function renderUserTypeChart(userTypes) {
   const ctx = document.getElementById('userTypeChart');
+  if (!ctx) return;
 
   if (userTypeChart) {
     userTypeChart.destroy();
@@ -583,6 +608,7 @@ async function loadTopIssues() {
     const data = await response.json();
 
     const issuesList = document.getElementById('issues-list');
+    if (!issuesList) return;
 
     if (!data.topIssues || data.topIssues.length === 0) {
       issuesList.innerHTML = '<p class="loading">No critical or high priority issues found in this period!</p>';
@@ -606,7 +632,7 @@ async function loadTopIssues() {
             ${examplesHtml || '<p class="example-item">No examples available</p>'}
           </div>
           <button class="view-examples-btn" onclick="toggleIssueExamples(${index})">
-            <span id="view-examples-text-${index}">📝 View Example Feedback</span>
+            <span id="view-examples-text-${index}">View Examples</span>
           </button>
         </div>
       `;
@@ -627,10 +653,10 @@ function toggleIssueExamples(index) {
 
   if (examplesEl.classList.contains('hidden')) {
     examplesEl.classList.remove('hidden');
-    textEl.textContent = '🔼 Hide Examples';
+    textEl.textContent = 'Hide Examples';
   } else {
     examplesEl.classList.add('hidden');
-    textEl.textContent = '📝 View Example Feedback';
+    textEl.textContent = 'View Examples';
   }
 }
 
@@ -776,6 +802,7 @@ async function loadLatestSummary() {
     const data = await response.json();
 
     const summaryContent = document.getElementById('summary-content');
+    if (!summaryContent) return;
 
     if (data.message) {
       // No summary available
@@ -792,7 +819,7 @@ async function loadLatestSummary() {
 
     summaryContent.innerHTML = `
       <div class="summary-slack">
-        <h3>📊 Daily Feedback Summary - ${data.date}</h3>
+        <h3>Daily Feedback Summary - ${data.date}</h3>
         ${data.stats ? `
           <div class="summary-fields">
             <div class="summary-field">
@@ -815,7 +842,7 @@ async function loadLatestSummary() {
         ` : ''}
         <div style="margin-top: 16px;">${summaryHtml}</div>
         <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.2);">
-          <strong>🔗 Explore in Detail:</strong><br>
+          <strong>Explore in Detail:</strong><br>
           <a href="${dashboardUrl}" style="color: #F38020; text-decoration: underline;" target="_blank">
             Open CloudPulse Dashboard →
           </a>
@@ -837,6 +864,7 @@ async function loadLatestSummary() {
  */
 function setupSummaryGenerator() {
   const btn = document.getElementById('generate-summary-btn');
+  if (!btn) return;
 
   btn.addEventListener('click', async () => {
     btn.disabled = true;
